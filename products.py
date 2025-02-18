@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-# === Promotion Classes ===
 class Promotion(ABC):
     """Abstract base class for all promotions"""
     def __init__(self, name: str):
@@ -40,7 +39,6 @@ class ThirdOneFree(Promotion):
         payable_items = quantity - (quantity // 3)
         return payable_items * product.price
 
-# === Product Classes ===
 class Product:
     """Represents a product in the store"""
     def __init__(self, name: str, price: float, quantity: int):
@@ -59,6 +57,10 @@ class Product:
         """Returns the current promotion of the product"""
         return self.promotion
 
+    def is_active(self) -> bool:
+        """Returns True if the product is available (quantity > 0)"""
+        return self.quantity > 0
+
     def buy(self, quantity: int) -> float:
         """Handles product purchase with promotions"""
         if quantity > self.quantity:
@@ -75,30 +77,32 @@ class Product:
         promo_text = f" (Promotion: {self.promotion.name})" if self.promotion else ""
         return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}{promo_text}"
 
-
-# === New Product Types ===
 class NonStockedProduct(Product):
-    """Products that have unlimited stock (e.g., digital goods)"""
+    """Represents a digital product or service with unlimited quantity"""
     def __init__(self, name: str, price: float):
         super().__init__(name, price, quantity=0)
 
+    def is_active(self) -> bool:
+        """Non-stocked products are always active"""
+        return True
+
     def buy(self, quantity: int) -> float:
-        """NonStocked products have unlimited purchases"""
+        """Allows unlimited purchase since it's not a physical product"""
         return self.price * quantity
 
     def show(self):
         return f"{self.name}, Price: {self.price} (Non-stocked product)"
 
-
 class LimitedProduct(Product):
-    """Products that have a limit per purchase"""
+    """Represents a product with a max purchase limit per order"""
     def __init__(self, name: str, price: float, quantity: int, max_purchase: int):
         super().__init__(name, price, quantity)
         self.max_purchase = max_purchase
 
     def buy(self, quantity: int) -> float:
+        """Restricts purchase to the max limit per order"""
         if quantity > self.max_purchase:
-            raise ValueError("Cannot buy more than the allowed limit for this product.")
+            raise ValueError("Cannot buy more than allowed quantity per order")
         return super().buy(quantity)
 
     def show(self):
